@@ -33,8 +33,9 @@ public static class LoggingBuilderExtensions
             .CreateLogger();
         
         // from https://github.com/serilog-tracing/serilog-tracing?tab=readme-ov-file#enabling-tracing-with-activitylistenerconfigurationtracetosharedlogger
-        using var _ = new ActivityListenerConfiguration()
-            // .Instrument.WithDefaultInstrumentation(true)
+        // TODO: TraceToSharedLogger returns an IDisposable, if we dispose it here, tracing does not work.
+        //       Do we need to dispose it? How? 
+        _ = new ActivityListenerConfiguration()
             .TraceToSharedLogger();
         
         builder.AddSerilog();
