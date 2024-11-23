@@ -7,4 +7,4 @@ Serilog is merely used as for the sinks.
 
 In Seq the traces and spans do not show up:
 
-![Seq Screenshot without traces and spans](SeqScreenshot.png)
+![Seq Screenshot without traces and spans](seq-screenshot.png)
