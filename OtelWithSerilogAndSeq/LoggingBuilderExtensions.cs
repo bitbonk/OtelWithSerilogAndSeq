@@ -3,6 +3,7 @@ using Serilog;
 using Serilog.Events;
 using Serilog.Sinks.SystemConsole.Themes;
 using SerilogTracing;
+using ILogger = Serilog.ILogger;
 
 namespace OtelWithSerilogAndSeq;
 
@@ -13,7 +14,7 @@ public static class LoggingBuilderExtensions
         builder.ClearProviders();
         builder.SetMinimumLevel(LogLevel.Trace);
         
-        Log.Logger = new LoggerConfiguration()
+        var logger = new LoggerConfiguration()
             .MinimumLevel.Verbose()
             .Enrich.FromLogContext()
             .Destructure.ToMaximumDepth(3)
@@ -31,15 +32,45 @@ public static class LoggingBuilderExtensions
                         "{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3} {SourceContext}: {Message} {ExceptionMessage} {NewLine}",
                         theme: AnsiConsoleTheme.Code))
             .CreateLogger();
+
+        Log.Logger = new DisposingLoggerAdapter(logger);
         
         // from https://github.com/serilog-tracing/serilog-tracing?tab=readme-ov-file#enabling-tracing-with-activitylistenerconfigurationtracetosharedlogger
-        // TODO: TraceToSharedLogger returns an IDisposable, if we dispose it here, tracing does not work.
-        //       Do we need to dispose it? How? 
-        _ = new ActivityListenerConfiguration()
+        var listener = new ActivityListenerConfiguration()
             .TraceToSharedLogger();
+        
+        ((DisposingLoggerAdapter)Log.Logger).SetListener(listener);
         
         builder.AddSerilog();
         
         return builder;
+    }
+
+    private sealed class DisposingLoggerAdapter : ILogger, IDisposable
+    {
+        private readonly ILogger _logger;
+        private IDisposable? _listener;
+
+        public DisposingLoggerAdapter(ILogger logger)
+        {
+            _logger = logger;
+        }
+        
+        public void SetListener(IDisposable listener) => _listener = listener;
+        
+        public void Write(LogEvent logEvent)
+        {
+            _logger.Write(logEvent);
+        }
+
+        public void Dispose()
+        {
+            if (_logger is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
+            
+            _listener?.Dispose();
+        }
     }
 }
