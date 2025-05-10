@@ -34,6 +34,7 @@ public static class LoggingBuilderExtensions
         // from https://github.com/serilog-tracing/serilog-tracing?tab=readme-ov-file#enabling-tracing-with-activitylistenerconfigurationtracetosharedlogger
         // TODO: TraceToSharedLogger returns an IDisposable, it must not be disposed before the app terminates,
         // because then tracing would not work anymore. How can we properly dispose it? 
+        // See also https://github.com/serilog-tracing/serilog-tracing/issues/159
         _ = new ActivityListenerConfiguration()
             .TraceToSharedLogger();
 
