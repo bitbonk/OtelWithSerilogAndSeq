@@ -3,8 +3,6 @@ as demonstrated here https://github.com/serilog-tracing/serilog-tracing
 
 The main difference here is that Serilog is not used for logging and tracing but instead the `Microsoft.Extensions.Logging` 
 abstraction and `System.Diagnostics.ActivitySource` are used.
-Serilog is merely used for the sinks.
 
-In Seq the traces and spans do not show up:
-
-![Seq Screenshot without traces and spans](seq-screenshot.png)
+The idea is that a framework or library that does the actual logging does not need a dependency to Serilog or Seq.
+Only at the application level the user would add Serilog and Seq as a sink.
