@@ -12,7 +12,7 @@ public static class LoggingBuilderExtensions
     {
         builder.ClearProviders();
         builder.SetMinimumLevel(LogLevel.Trace);
-        
+
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Verbose()
             .Enrich.FromLogContext()
@@ -23,23 +23,22 @@ public static class LoggingBuilderExtensions
             .Enrich.WithProperty(
                 "Application", // TODO: use process.executable.name ?
                 Assembly.GetEntryAssembly()?.GetName().Name ?? string.Empty)
-            .WriteTo.Logger(
-                c => c
-                    .Enrich.With<ExceptionMessageEnricher>()
-                    .WriteTo.Console(
-                        LogEventLevel.Information,
-                        "{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3} {SourceContext}: {Message} {ExceptionMessage} {NewLine}",
-                        theme: AnsiConsoleTheme.Code))
+            .WriteTo.Logger(c => c
+                .Enrich.With<ExceptionMessageEnricher>()
+                .WriteTo.Console(
+                    LogEventLevel.Information,
+                    "{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3} {SourceContext}: {Message} {ExceptionMessage} {NewLine}",
+                    theme: AnsiConsoleTheme.Code))
             .CreateLogger();
-        
+
         // from https://github.com/serilog-tracing/serilog-tracing?tab=readme-ov-file#enabling-tracing-with-activitylistenerconfigurationtracetosharedlogger
-        // TODO: TraceToSharedLogger returns an IDisposable, if we dispose it here, tracing does not work.
-        //       Do we need to dispose it? How? 
+        // TODO: TraceToSharedLogger returns an IDisposable, it must not be disposed before the app terminates,
+        // because then tracing would not work anymore. How can we properly dispose it? 
         _ = new ActivityListenerConfiguration()
             .TraceToSharedLogger();
-        
-        builder.AddSerilog();
-        
+
+        builder.AddSerilog(dispose: true);
+
         return builder;
     }
 }
